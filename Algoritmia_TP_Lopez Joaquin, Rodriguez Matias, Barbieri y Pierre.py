@@ -1,7 +1,7 @@
 # Lista de usuarios (usuario, contraseña, rol)
 usuarios = [
-    ("admin", "admin", "Admin"),
-    ("user", "1234", "User")
+    {"usuario": "admin", "contraseña": "admin", "rol": "Admin"},
+    {"usuario": "user", "contraseña": "1234", "rol": "User"}
 ]
 
 def login():
@@ -25,10 +25,10 @@ def login():
     contraseña = input("Contraseña: ")
 
     # Buscar en la lista de usuarios
-    for u, c, rol in usuarios:
-        if u == usuario and c == contraseña:
-            print("Bienvenido", usuario, "rol:", rol)
-            return rol, usuario
+    for u  in usuarios:
+        if u["usuario"] == usuario and u["contraseña"] == contraseña:
+            print("Bienvenido", usuario, "rol:", u["rol"])
+            return u["rol"], usuario
 
     print("Credenciales inválidas")
     return None, None
@@ -38,7 +38,7 @@ def registrarUsuario():
     usuario = input("Nuevo usuario: ")
     contraseña = input("Contraseña: ")
     rol = "User"
-    usuarios.append((usuario, contraseña, rol))
+    usuarios.append({"usuario": usuario, "contraseña": contraseña, "rol": rol})
     print("Usuario creado con éxito.")
 
 def mostrarCartelera(peliculas,fechas,horarios,precios):
