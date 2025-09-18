@@ -4,15 +4,41 @@ usuarios = [
     {"usuario": "user", "contraseña": "1234", "rol": "User"}
 ]
 
-def login():
+
+     """
+    Muestra un menú de login para el sistema.
+    Permite:
+        1) Ingresar con usuario registrado
+        2) Entrar como invitado
+        3) Registrar un nuevo usuario
+    
+    Retorna:
+        tuple: (rol, usuario) si el login es válido
+               ("Guest", "Invitado") si entra como guest
+               (None, None) si no se pudo autenticar
+    """
+
     print("=== Sistema de Login ===")
     print("1) Ingresar con usuario")
     print("2) Entrar como Guest")
     print("3) Registrar Usuario")
-    opcion = int(input("Seleccione opción: "))
-    while (opcion<1 or opcion>3):
-        print("La opcion debe estar entre 1-3 ")
+
+    # Validación con try/except
+    try:
         opcion = int(input("Seleccione opción: "))
+    except ValueError:
+        print("Debe ingresar un número válido.")
+        return None, None
+
+    # Validación con lambda
+    es_valida = lambda op: op in [1, 2, 3]
+    while not es_valida(opcion):
+        print("La opción debe estar entre 1 y 3")
+        try:
+            opcion = int(input("Seleccione opción: "))
+        except ValueError:
+            print("Debe ingresar un número válido.")
+            return None, None
 
     if opcion == 2:
         return "Guest", "Invitado"
@@ -24,14 +50,18 @@ def login():
     usuario = input("Usuario: ")
     contraseña = input("Contraseña: ")
 
-    # Buscar en la lista de usuarios
-    for u  in usuarios:
-        if u["usuario"] == usuario and u["contraseña"] == contraseña:
-            print("Bienvenido", usuario, "rol:", u["rol"])
-            return u["rol"], usuario
+    # Buscar usuario válido con next + lambda
+    usuario_valido = next(
+        (u for u in usuarios if u["usuario"] == usuario and u["contraseña"] == contraseña),
+        None
+    )
 
-    print("Credenciales inválidas")
-    return None, None
+    if usuario_valido:
+        print("Bienvenido", usuario_valido["usuario"], "rol:", usuario_valido["rol"])
+        return usuario_valido["rol"], usuario_valido["usuario"]
+    else:
+        print("Credenciales inválidas")
+        return None, None
 
 def registrarUsuario():
     print("=== Registrar Nuevo Usuario ===")
@@ -296,5 +326,6 @@ def main():
             salir=int(input("Desea volver al menú? 1)SI 2)NO: "))
 
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
+
 
 main()
