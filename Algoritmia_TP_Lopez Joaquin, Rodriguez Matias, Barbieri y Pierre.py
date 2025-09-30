@@ -21,7 +21,6 @@ def login():
     print("2) Entrar como Guest")
     print("3) Registrar Usuario")
 
-    # Validación de input con try/except
     try:
         opcion = int(input("Seleccione opción: "))
     except ValueError:
@@ -42,11 +41,9 @@ def login():
         registrarUsuario()
         return login()  # vuelve al login después de registrar
 
-    # Opción 1: login normal
     usuario = input("Usuario: ")
     contraseña = input("Contraseña: ")
 
-    # Buscar usuario válido con next
     usuario_valido = next(
         (u for u in usuarios if u["usuario"] == usuario and u["contraseña"] == contraseña),
         None
@@ -62,7 +59,6 @@ def login():
 def registrarUsuario():
     print("=== Registrar Nuevo Usuario ===")
 
-    # Validar que el nombre de usuario no exista
     nombre_valido = False
     while not nombre_valido:
         usuario = input("Nuevo usuario: ")
@@ -71,7 +67,6 @@ def registrarUsuario():
         else:
             nombre_valido = True
 
-    # Validar formato de contraseña
     print("La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.")
     contraseña_valida = False
     while not contraseña_valida:
@@ -85,22 +80,21 @@ def registrarUsuario():
         else:
             print("La contraseña no cumple los requisitos.")
 
-    # Rol por defecto: User
     usuarios.append({"usuario": usuario, "contraseña": contraseña, "rol": "User"})
     print("Usuario creado con éxito.")
 
 # ------------------ FUNCIONES DE CINE ------------------ #
 
-def mostrarCartelera(peliculas,fechas,horarios,precios):
+def mostrarCartelera(peliculas):
     print("-------------------------------------------")
-    for i in range(len(peliculas)):
-        print(f"{i+1}) {peliculas[i]} - {fechas[i]} {horarios[i]} - ${precios[i]}")
+    for i, peli in enumerate(peliculas, start=1):
+        print(f"{i}) {peli['titulo']} - {peli['fecha']} {peli['horario']} - ${peli['precio']}")
 
-def mostrarEstadoSala(listaAsientos):
+def mostrarEstadoSala(peliculas):
     estados=[]
-    for sala in listaAsientos:
-        ocupados = sum(sala)
-        if ocupados == len(sala):
+    for peli in peliculas:
+        ocupados = sum(peli["asientos"])
+        if ocupados == len(peli["asientos"]):
             estados.append(1)  # lleno
         elif ocupados == 0:
             estados.append(0)  # vacío
@@ -143,8 +137,8 @@ def borrarRegistroAsiento(asientos):
 
     return cantidadEliminados
 
-def seleccionarFuncion(peliculas,fechas,horarios,prohibir,palabra,precios):
-    mostrarCartelera(peliculas,fechas,horarios,precios)
+def seleccionarFuncion(peliculas,prohibir,palabra):
+    mostrarCartelera(peliculas)
     valido=0
     while valido==0:
         peliculaElegida=int(input("Seleccione función: "))
@@ -193,35 +187,31 @@ def mostrarAsientos(asientosFuncion,cantFilas,cantColumnas):
         print("")
     print("")
 
-def eliminarPelicula(peliculas,fechas,horarios,precios,listaAsientos,recaudaciones):
+def eliminarPelicula(peliculas):
     opc=int(input("Ingrese la pelicula a eliminar: "))-1
-    while (opc <0 or opc >= len(listaAsientos)):
+    while (opc <0 or opc >= len(peliculas)):
         opc=int(input("Número inválido. Ingrese película a eliminar: "))-1
     peliculas.pop(opc)
-    fechas.pop(opc)
-    precios.pop(opc)
-    horarios.pop(opc)
-    listaAsientos.pop(opc)
-    recaudaciones.pop(opc)
     print("Pelicula eliminada correctamente")
 
-def agregarPelicula(peliculas,fechas,horarios,precios,listaAsientos,recaudaciones,cantAsientos):
+def agregarPelicula(peliculas,cantAsientos):
     nombre=input("Nombre de la pelicula: ")
     fecha=input("Fecha: ")
     horario=input("Horario: ")
     precio=int(input("Precio de entrada: "))
     asientosFuncion=[False for _ in range (cantAsientos)]
-    peliculas.append(nombre)
-    fechas.append(fecha)
-    horarios.append(horario)
-    precios.append(precio)
-    listaAsientos.append(asientosFuncion)
-    recaudaciones.append(0)
+    peliculas.append({
+        "titulo": nombre,
+        "fecha": fecha,
+        "horario": horario,
+        "precio": precio,
+        "recaudacion": 0,
+        "asientos": asientosFuncion
+    })
 
 # ------------------ MAIN ------------------ #
 
 def main():
-    # login
     rol, usuario = login()
     while (rol == None):
         rol, usuario = login()
@@ -232,13 +222,11 @@ def main():
     cantFilas=3
     cantColumnas=10
 
-    peliculas=["Hereditary","Scott Pilgrim vs. The World","The Truman Show"]
-    fechas=["30/7/2025","31/7/2025","1/8/2025"]
-    horarios=["9:00","12:00","18:00"]
-    precios = [1200,1500,1000]
-    recaudaciones = [0,0,0]
-
-    listaAsientos=[[False for _ in range (cantAsientos)] for _ in peliculas]
+    peliculas=[
+        {"titulo":"Hereditary","fecha":"30/7/2025","horario":"9:00","precio":1200,"recaudacion":0,"asientos":[False for _ in range(cantAsientos)]},
+        {"titulo":"Scott Pilgrim vs. The World","fecha":"31/7/2025","horario":"12:00","precio":1500,"recaudacion":0,"asientos":[False for _ in range(cantAsientos)]},
+        {"titulo":"The Truman Show","fecha":"1/8/2025","horario":"18:00","precio":1000,"recaudacion":0,"asientos":[False for _ in range(cantAsientos)]}
+    ]
 
     salir=0
     while salir!=2:
@@ -264,46 +252,46 @@ def main():
                 opcGuest=int(input("Opción incorrecta. Seleccione opción: "))
 
         if (opcAdmin==1 or opcUser==1 or opcGuest==1):
-            mostrarCartelera(peliculas,fechas,horarios,precios)
+            mostrarCartelera(peliculas)
 
         elif (opcAdmin==2 or opcUser==2):
-            estados = mostrarEstadoSala(listaAsientos)
+            estados = mostrarEstadoSala(peliculas)
             prohibir = prohibirSalaCompleta(estados)
             if all(p==1 for p in prohibir):
                 print("No hay funciones disponibles")
             else:
-                peliculaElegida = seleccionarFuncion(peliculas,fechas,horarios,prohibir,"agregar",precios)
-                cantidad = seleccionarAsiento(listaAsientos[peliculaElegida-1])
-                recaudaciones[peliculaElegida-1] += cantidad * precios[peliculaElegida-1]
+                peliculaElegida = seleccionarFuncion(peliculas,prohibir,"agregar")
+                cantidad = seleccionarAsiento(peliculas[peliculaElegida-1]["asientos"])
+                peliculas[peliculaElegida-1]["recaudacion"] += cantidad * peliculas[peliculaElegida-1]["precio"]
 
         elif (opcAdmin==3 or opcUser==3 or opcGuest==2):
-            mostrarCartelera(peliculas,fechas,horarios,precios)
+            mostrarCartelera(peliculas)
             peliculaElegida=int(input("Función para ver asientos: "))
             if 1 <= peliculaElegida <= len(peliculas):
-                mostrarAsientos(listaAsientos[peliculaElegida-1],cantFilas,cantColumnas)
+                mostrarAsientos(peliculas[peliculaElegida-1]["asientos"],cantFilas,cantColumnas)
             else:
                 print("Opción incorrecta")
 
         elif (opcAdmin==4 or opcUser==4):
-            estados = mostrarEstadoSala(listaAsientos)
+            estados = mostrarEstadoSala(peliculas)
             prohibir = prohibirSalaVacia(estados)
             if all(p==1 for p in prohibir):
                 print("Todas las funciones están vacías")
             else:
-                peliculaElegida = seleccionarFuncion(peliculas,fechas,horarios,prohibir,"borrar",precios)
-                cantidad = borrarRegistroAsiento(listaAsientos[peliculaElegida-1])
-                recaudaciones[peliculaElegida-1] -= cantidad * precios[peliculaElegida-1]
+                peliculaElegida = seleccionarFuncion(peliculas,prohibir,"borrar")
+                cantidad = borrarRegistroAsiento(peliculas[peliculaElegida-1]["asientos"])
+                peliculas[peliculaElegida-1]["recaudacion"] -= cantidad * peliculas[peliculaElegida-1]["precio"]
 
         elif (opcAdmin==5):
-            for i in range(len(peliculas)):
-                print(f"{peliculas[i]}: ${recaudaciones[i]}")
+            for peli in peliculas:
+                print(f"{peli['titulo']}: ${peli['recaudacion']}")
 
         elif (opcAdmin==6):
-            mostrarCartelera(peliculas,fechas,horarios,precios)
-            eliminarPelicula(peliculas,fechas,horarios,precios,listaAsientos,recaudaciones)
+            mostrarCartelera(peliculas)
+            eliminarPelicula(peliculas)
 
         elif (opcAdmin==7):
-            agregarPelicula(peliculas,fechas,horarios,precios,listaAsientos,recaudaciones,cantAsientos)
+            agregarPelicula(peliculas,cantAsientos)
 
         elif (opcAdmin==8 or opcUser==5 or opcGuest==3):
             salir=2
@@ -314,4 +302,3 @@ def main():
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
 
 main()
-
