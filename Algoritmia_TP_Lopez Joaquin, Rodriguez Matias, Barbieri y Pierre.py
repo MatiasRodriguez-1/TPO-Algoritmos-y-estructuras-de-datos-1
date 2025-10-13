@@ -298,7 +298,28 @@ def main():
 
         if salir!=2:
             salir=int(input("¿Desea volver al menú? 1)SI 2)NO: "))
+            
+    # ------------------ AGRGAMOS ALGO DE CONJUNTOS ------------------ #
+    
+    print("\n=== Ejemplo de uso de conjuntos ===")
+
+    # Crear un conjunto con los roles existentes
+    roles_existentes = {u["rol"] for u in usuarios}
+    print("Roles existentes en el sistema:", roles_existentes)
+
+    # Crear un conjunto con todos los nombres de usuario
+    nombres_usuarios = {u["usuario"] for u in usuarios}
+
+    # Agregar un usuario duplicado para mostrar la propiedad de unicidad
+    nombres_usuarios.add("admin")
+    print("Usuarios registrados (sin duplicados gracias al conjunto):", nombres_usuarios)
+
+    # Diferencia de conjuntos (usuarios y roles)
+    print("Cantidad total de usuarios:", len(nombres_usuarios))
+    print("Cantidad total de roles:", len(roles_existentes))
+
 
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
 
 main()
+
