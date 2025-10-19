@@ -28,7 +28,6 @@ Proyecto de simulación de un sistema de cine, desarrollado en Python como traba
 ##  Futuras mejoras
 - Guardar usuarios y películas en un archivo o base de datos.
 - Uso de funciones `lambda` para simplificar filtros y búsquedas.
-- Interfaz gráfica en lugar de consola.
 
 ## 👥 Equipo
 Trabajo realizado por el grupo:  
