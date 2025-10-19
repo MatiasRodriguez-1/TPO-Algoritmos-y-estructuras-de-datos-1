@@ -44,7 +44,6 @@ def login():
     usuario = input("Usuario: ")
     contraseña = input("Contraseña: ")
     
-    #no vimos next
     usuario_valido = next(
         (u for u in usuarios if u["usuario"] == usuario and u["contraseña"] == contraseña),
         None
@@ -59,7 +58,6 @@ def login():
 
 def registrarUsuario():
     print("=== Registrar Nuevo Usuario ===")
-    #no vimos any
     nombre_valido = False
     while not nombre_valido:
         usuario = input("Nuevo usuario: ")
@@ -426,5 +424,6 @@ def main():
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
 
 main()
+
 
 
