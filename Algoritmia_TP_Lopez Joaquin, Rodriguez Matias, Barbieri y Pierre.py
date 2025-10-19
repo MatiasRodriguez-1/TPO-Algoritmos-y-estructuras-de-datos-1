@@ -43,7 +43,8 @@ def login():
 
     usuario = input("Usuario: ")
     contraseña = input("Contraseña: ")
-
+    
+    #no vimos next
     usuario_valido = next(
         (u for u in usuarios if u["usuario"] == usuario and u["contraseña"] == contraseña),
         None
@@ -58,12 +59,14 @@ def login():
 
 def registrarUsuario():
     print("=== Registrar Nuevo Usuario ===")
-
+    #no vimos any
     nombre_valido = False
     while not nombre_valido:
         usuario = input("Nuevo usuario: ")
         if any(u["usuario"] == usuario for u in usuarios):
             print("Ese nombre de usuario ya existe. Elegí otro.")
+        elif usuario=="":
+            print("El nombre de usuario no puede ser dejado en blanco")
         else:
             nombre_valido = True
 
@@ -77,14 +80,18 @@ def registrarUsuario():
 
         if cumple_formato:
             contraseña_valida = True
+            verificacion=input("Ingrese la contraseña nuevamente: ")
+            if verificacion!=contraseña:
+                contraseña_valida = False
+                print("La contraseña debe ser la misma")
+                print("Vuelva a ingresar la contraseña")
         else:
             print("La contraseña no cumple los requisitos.")
-
+        
     usuarios.append({"usuario": usuario, "contraseña": contraseña, "rol": "User"})
     print("Usuario creado con éxito.")
 
 # ------------------ FUNCIONES DE CINE ------------------ #
-
 def mostrarCartelera(peliculas):
     print("-------------------------------------------")
     for i, peli in enumerate(peliculas, start=1):
@@ -116,39 +123,53 @@ def borrarRegistroAsiento(asientos):
 
     while reingreso==1 and contOcupados>0:
         print(f"En esta sala hay {len(asientos)} asientos, {contOcupados} ocupados")
-        asientoElegido=int(input("Seleccione asiento a liberar: ")) - 1
+        try:
+            asientoElegido=int(input("Seleccione asiento a liberar: ")) - 1
 
-        if 0 <= asientoElegido < len(asientos) and asientos[asientoElegido] and asientoElegido not in asientosElegidos:
-            print("Reserva eliminada correctamente")
-            asientosElegidos.append(asientoElegido)
-            contOcupados -= 1
-            cantidadEliminados += 1
-        else:
-            print("Asiento inválido o ya libre")
-
+            if 0 <= asientoElegido < len(asientos) and asientos[asientoElegido] and asientoElegido not in asientosElegidos:
+                print("Reserva eliminada correctamente")
+                asientosElegidos.append(asientoElegido)
+                contOcupados -= 1
+                cantidadEliminados += 1
+            else:
+                print("Asiento inválido o ya libre")
+        except ValueError:
+            print("ingrese numeros, no caracteres")
+            
         if contOcupados > 0:
-            reingreso=int(input("Desea seleccionar otro asiento? 1)SI 2)NO: "))
+            reingreso = 0
+            while reingreso not in [1, 2]:
+                try:
+                    reingreso = int(input("Desea seleccionar otro asiento? 1)SI 2)NO: "))
+                    if reingreso not in [1, 2]:
+                        print("Ingrese un número válido (1-2)")
+                except ValueError:
+                    print("No se permiten caracteres, solo números")
         else:
             print("La sala está vacía")
-            reingreso=2
+            reingreso = 2
 
     for asiento in asientosElegidos:
         asientos[asiento] = False
-
+        
     return cantidadEliminados
 
 def seleccionarFuncion(peliculas,prohibir,palabra):
     mostrarCartelera(peliculas)
     valido=0
     while valido==0:
-        peliculaElegida=int(input("Seleccione función: "))
-        if 1 <= peliculaElegida <= len(peliculas):
-            if prohibir[peliculaElegida-1]!=1:
-                valido=1
-            else:
-                print(f"Lo sentimos, esta función está {'llena' if palabra=='agregar' else 'vacía'}")
+        try:
+            peliculaElegida=int(input("Seleccione función: "))
+        except ValueError:
+            print("porfavor, no ingrese caracteres. Solo numeros")
         else:
-            print("Opción incorrecta")
+            if 1 <= peliculaElegida <= len(peliculas):
+                if prohibir[peliculaElegida-1]!=1:
+                    valido=1
+                else:
+                    print(f"Lo sentimos, esta función está {'llena' if palabra=='agregar' else 'vacía'}")
+            else:
+                print("Opción incorrecta")
     return peliculaElegida
 
 def seleccionarAsiento(asientos):
@@ -159,25 +180,35 @@ def seleccionarAsiento(asientos):
 
     while reingreso==1 and contDisponibles>0:
         print(f"Total asientos: {len(asientos)}, disponibles: {contDisponibles}")
-        asientoElegido=int(input("Seleccione asiento: ")) - 1
-
-        if 0 <= asientoElegido < len(asientos) and not asientos[asientoElegido] and asientoElegido not in asientosElegidos:
-            print("Asiento reservado correctamente")
-            asientosElegidos.append(asientoElegido)
-            contDisponibles -= 1
-            cantidadReservados += 1
+        try:
+            asientoElegido=int(input("Seleccione asiento: ")) - 1
+        except ValueError:
+            print("Porfavor ingrese solo numeros, no caracteres.")
         else:
-            print("Asiento inválido o ya seleccionado")
+            if 0 <= asientoElegido < len(asientos) and not asientos[asientoElegido] and asientoElegido not in asientosElegidos:
+                print("Asiento reservado correctamente")
+                asientosElegidos.append(asientoElegido)
+                contDisponibles -= 1
+                cantidadReservados += 1
+            else:
+                print("Asiento inválido o ya seleccionado")
 
-        if contDisponibles>0:
-            reingreso=int(input("Desea seleccionar otro asiento? 1)SI 2)NO: "))
-        else:
-            print("La sala está completa")
-            reingreso=2
-
+            if contDisponibles>0:
+                reingreso=0
+                while(reingreso not in [1,2]):
+                    try:
+                        reingreso=int(input("Desea seleccionar otro asiento? 1)SI 2)NO: "))
+                        if (reingreso not in [1,2]):
+                            print("Ingrese un numero entre (1-2)")
+                    except ValueError:
+                        print("Porfavor ingrese solo numeros, no caracteres.")
+            else:
+                print("La sala está completa")
+                reingreso=2
+                
     for asiento in asientosElegidos:
         asientos[asiento] = True
-
+        
     return cantidadReservados
 
 def mostrarAsientos(asientosFuncion,cantFilas,cantColumnas):
@@ -188,17 +219,53 @@ def mostrarAsientos(asientosFuncion,cantFilas,cantColumnas):
     print("")
 
 def eliminarPelicula(peliculas):
-    opc=int(input("Ingrese la pelicula a eliminar: "))-1
-    while (opc <0 or opc >= len(peliculas)):
-        opc=int(input("Número inválido. Ingrese película a eliminar: "))-1
+    if len(peliculas)==0:
+        print("no hay peliculas para eliminar")
+        return
+    valido=False
+    while (valido==False):
+        try:
+            opc=int(input("Ingrese la pelicula a eliminar: "))-1
+            if 0 <= opc < len(peliculas):
+                valido = True
+            else:
+                print(f"Ingrese un numero entre (1-{len(peliculas)})")
+        except ValueError:
+            print("Ingrese un numero, no caracteres")
+        
     peliculas.pop(opc)
     print("Pelicula eliminada correctamente")
 
 def agregarPelicula(peliculas,cantAsientos):
-    nombre=input("Nombre de la pelicula: ")
+    nombreValido = False
+    while (nombreValido==False):
+        nombre = input("Nombre de la película: ")
+        if nombre == "":
+            print("El nombre no puede estar vacío")
+        elif any(p["titulo"].lower() == nombre.lower() for p in peliculas):
+            print("Ya existe una película con ese nombre. Ingrese otro nombre.")
+        else:
+            nombreValido = True
+
     fecha=input("Fecha: ")
+    while(fecha==""):
+        print("la fecha no puede estar vacia")
+        fecha=input("Fecha: ")
     horario=input("Horario: ")
-    precio=int(input("Precio de entrada: "))
+    while(horario==""):
+        print("el horario no puede estar vacio")
+        horario=input("Horario: ")
+        
+    precioValido=False
+    while (precioValido==False):
+        try:
+            precio=int(input("Precio de entrada: "))
+            if (precio>=1500):
+                precioValido=True
+            else:
+                print("El precio debe ser de al menos 1500")
+        except ValueError:
+            print("Ingrese numeros no caracteres")
     asientosFuncion=[False for _ in range (cantAsientos)]
     peliculas.append({
         "titulo": nombre,
@@ -208,12 +275,15 @@ def agregarPelicula(peliculas,cantAsientos):
         "recaudacion": 0,
         "asientos": asientosFuncion
     })
+    print(f'Película "{nombre}" agregada correctamente.')
 
 # ------------------ MAIN ------------------ #
 
 def main():
     rol, usuario = login()
     while (rol == None):
+        print("Usuario invalido")
+        print("Volviendo a la pantalla de login")
         rol, usuario = login()
 
     print(f"Acceso concedido: {usuario} ({rol})")
@@ -235,21 +305,42 @@ def main():
 
         if (rol=="Admin"):
             print("1) Mostrar Cartelera\n2) Reservar Asiento\n3) Mostrar Asientos Disponibles\n4) Borrar Reserva Asiento\n5) Ver Recaudación\n6) Eliminar Pelicula\n7) Agregar Pelicula\n8) Salir")
-            opcAdmin=int(input("Seleccione opción: "))
-            while opcAdmin<1 or opcAdmin>8:
-                opcAdmin=int(input("Opción incorrecta. Seleccione opción: "))
+            opcValido=False
+            while (opcValido==False):         
+                try:
+                    opcAdmin=int(input("Seleccione opción: "))
+                    if (opcAdmin>0 and opcAdmin<9):
+                        opcValido=True
+                    else:
+                        print("El numero debe estar entre (1-8)")
+                except ValueError:
+                    print("Ingrese un numero no caracteres")
 
         elif(rol=="User"):
             print("1) Mostrar Cartelera\n2) Reservar Asiento\n3) Mostrar Asientos Disponibles\n4) Borrar Reserva Asiento\n5) Salir")
-            opcUser=int(input("Seleccione opción: "))
-            while opcUser<1 or opcUser>5:
-                opcUser=int(input("Opción incorrecta. Seleccione opción: "))
+            opcValido=False
+            while (opcValido==False):         
+                try:
+                    opcUser=int(input("Seleccione opción: "))
+                    if (opcUser>0 and opcUser<6):
+                        opcValido=True
+                    else:
+                        print("El numero debe estar entre (1-5)")
+                except ValueError:
+                    print("Ingrese un numero no caracteres")
 
         else:  # Guest
             print("1) Mostrar Cartelera\n2) Mostrar Asientos Disponibles\n3) Salir")
-            opcGuest=int(input("Seleccione opción: "))
-            while opcGuest<1 or opcGuest>3:
-                opcGuest=int(input("Opción incorrecta. Seleccione opción: "))
+            opcValido=False
+            while (opcValido==False):         
+                try:
+                    opcGuest=int(input("Seleccione opción: "))
+                    if (opcGuest>0 and opcGuest<4):
+                        opcValido=True
+                    else:
+                        print("El numero debe estar entre (1-3)")
+                except ValueError:
+                    print("Ingrese un numero no caracteres")
 
         if (opcAdmin==1 or opcUser==1 or opcGuest==1):
             mostrarCartelera(peliculas)
@@ -266,11 +357,17 @@ def main():
 
         elif (opcAdmin==3 or opcUser==3 or opcGuest==2):
             mostrarCartelera(peliculas)
-            peliculaElegida=int(input("Función para ver asientos: "))
-            if 1 <= peliculaElegida <= len(peliculas):
-                mostrarAsientos(peliculas[peliculaElegida-1]["asientos"],cantFilas,cantColumnas)
-            else:
-                print("Opción incorrecta")
+            peliculaValida=False
+            while (peliculaValida==False):
+                try:
+                    peliculaElegida=int(input("Función para ver asientos: "))
+                    if 1 <= peliculaElegida <= len(peliculas):
+                        mostrarAsientos(peliculas[peliculaElegida-1]["asientos"],cantFilas,cantColumnas)
+                        peliculaValida=True
+                    else:
+                        print("Opción incorrecta")
+                except ValueError:
+                    print("ingrese solo numeros, no caracteres.")
 
         elif (opcAdmin==4 or opcUser==4):
             estados = mostrarEstadoSala(peliculas)
@@ -296,8 +393,15 @@ def main():
         elif (opcAdmin==8 or opcUser==5 or opcGuest==3):
             salir=2
 
-        if salir!=2:
-            salir=int(input("¿Desea volver al menú? 1)SI 2)NO: "))
+        if salir != 2:
+            salir = 0
+            while salir not in [1, 2]:
+                try:
+                    salir = int(input("¿Desea volver al menú? 1)SI 2)NO: "))
+                    if salir not in [1, 2]:
+                        print("Ingrese un número válido (1-2)")
+                except ValueError:
+                    print("No se permiten caracteres, solo números")
             
     # ------------------ AGRGAMOS ALGO DE CONJUNTOS ------------------ #
     
@@ -322,4 +426,5 @@ def main():
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
 
 main()
+
 
