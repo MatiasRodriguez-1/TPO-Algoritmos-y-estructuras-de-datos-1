@@ -1,21 +1,28 @@
-# Lista de usuarios (usuario, contraseña, rol)
-usuarios = [
-    {"usuario": "admin", "contraseña": "admin", "rol": "Admin"},
-    {"usuario": "user", "contraseña": "1234", "rol": "User"}
-]
+
+# ------------------ MANEJO DE ARCHIVO TXT ------------------ #
+print("\n=== Carga de usuarios desde archivo ===")
+usuarios = []
+
+try:
+    archivo = open("usuarios.txt", "r")
+    for linea in archivo:
+        if linea != "\n":
+            partes = linea.split(",")
+            if len(partes) == 3:
+                usuario = partes[0]
+                contrasena = partes[1]
+                rol = partes[2].replace("\n", "")
+                usuarios.append({"usuario": usuario, "contraseña": contrasena, "rol": rol})
+    archivo.close()
+    print("Archivo 'usuarios.txt' leído correctamente.")
+except FileNotFoundError:
+    print("Archivo no encontrado. Se creará vacío.")
+    archivo = open("usuarios.txt", "a")
+    archivo.close()
+
+# ------------------ SISTEMA PRINCIPAL ------------------ #
 
 def login():
-    """
-    Muestra un menú de login para el sistema.
-    Opciones:
-        1) Ingresar con usuario
-        2) Entrar como invitado
-        3) Registrar nuevo usuario
-    Retorna:
-        (rol, usuario) si login válido
-        ("Guest", "Invitado") si guest
-        (None, None) si error
-    """
     print("=== Sistema de Login ===")
     print("1) Ingresar con usuario")
     print("2) Entrar como Guest")
@@ -39,7 +46,7 @@ def login():
 
     elif opcion == 3:
         registrarUsuario()
-        return login()  # vuelve al login después de registrar
+        return login()
 
     usuario = input("Usuario: ")
     contraseña = input("Contraseña: ")
@@ -87,6 +94,11 @@ def registrarUsuario():
             print("La contraseña no cumple los requisitos.")
         
     usuarios.append({"usuario": usuario, "contraseña": contraseña, "rol": "User"})
+
+    # Guardar el nuevo usuario en el archivo sin borrar los anteriores
+    with open("usuarios.txt", "a") as archivo:
+        archivo.write(f"{usuario},{contraseña},User\n")
+
     print("Usuario creado con éxito.")
 
 # ------------------ FUNCIONES DE CINE ------------------ #
@@ -454,3 +466,4 @@ def main():
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
 
 main()
+
