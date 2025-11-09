@@ -1,21 +1,42 @@
-# Lista de usuarios (usuario, contraseña, rol)
-usuarios = [
-    {"usuario": "admin", "contraseña": "admin", "rol": "Admin"},
-    {"usuario": "user", "contraseña": "1234", "rol": "User"}
-]
+import time
+
+def limpiarPantalla():
+    for i in range(100):
+        print("\n")
+
+def contar(n):
+    if n<=0:
+        limpiarPantalla()
+        return
+    print(n)
+    time.sleep(1)
+    contar(n-1)
+        
+
+# ------------------ MANEJO DE ARCHIVO TXT ------------------ #
+print("\n=== Carga de usuarios desde archivo ===")
+usuarios = [{"usuario": "admin", "contraseña": "admin", "rol": "Admin"}]
+
+try:
+    archivo = open("usuarios.txt", "r",encoding="utf-8")
+    for linea in archivo:
+        if linea != "\n":
+            partes = linea.split(",")
+            if len(partes) == 3:
+                usuario = partes[0]
+                contraseña = partes[1]
+                rol = partes[2].replace("\n", "")
+                usuarios.append({"usuario": usuario, "contraseña": contraseña, "rol": rol})
+    archivo.close()
+    print("Archivo 'usuarios.txt' leído correctamente.")
+except FileNotFoundError:
+    print("Archivo no encontrado. Se creará vacío.")
+    archivo = open("usuarios.txt", "a",encoding="utf-8")
+    archivo.close()
+
+# ------------------ SISTEMA PRINCIPAL ------------------ #
 
 def login():
-    """
-    Muestra un menú de login para el sistema.
-    Opciones:
-        1) Ingresar con usuario
-        2) Entrar como invitado
-        3) Registrar nuevo usuario
-    Retorna:
-        (rol, usuario) si login válido
-        ("Guest", "Invitado") si guest
-        (None, None) si error
-    """
     print("=== Sistema de Login ===")
     print("1) Ingresar con usuario")
     print("2) Entrar como Guest")
@@ -39,7 +60,7 @@ def login():
 
     elif opcion == 3:
         registrarUsuario()
-        return login()  # vuelve al login después de registrar
+        return login()
 
     usuario = input("Usuario: ")
     contraseña = input("Contraseña: ")
@@ -63,7 +84,7 @@ def registrarUsuario():
         usuario = input("Nuevo usuario: ")
         if any(u["usuario"] == usuario for u in usuarios):
             print("Ese nombre de usuario ya existe. Elegí otro.")
-        elif usuario=="":
+        elif usuario == "":
             print("El nombre de usuario no puede ser dejado en blanco")
         else:
             nombre_valido = True
@@ -77,32 +98,41 @@ def registrarUsuario():
         cumple_formato = (len(contraseña) >= 8 and tiene_mayus and tiene_numero)
 
         if cumple_formato:
-            contraseña_valida = True
-            verificacion=input("Ingrese la contraseña nuevamente: ")
-            if verificacion!=contraseña:
-                contraseña_valida = False
+            verificacion = input("Ingrese la contraseña nuevamente: ")
+            if verificacion == contraseña:
+                contraseña_valida = True
+            else:
                 print("La contraseña debe ser la misma")
                 print("Vuelva a ingresar la contraseña")
         else:
             print("La contraseña no cumple los requisitos.")
         
     usuarios.append({"usuario": usuario, "contraseña": contraseña, "rol": "User"})
+
+    # Guardar el nuevo usuario en el archivo sin borrar los anteriores
+    with open("usuarios.txt", "a",encoding="utf-8") as archivo:
+        archivo.write(f"{usuario},{contraseña},User\n")
+
     print("Usuario creado con éxito.")
 
 # ------------------ FUNCIONES DE CINE ------------------ #
 def mostrarCartelera(peliculas):
     print("-------------------------------------------")
-    for i, peli in enumerate(peliculas, start=1):
-        print(f"{i}) {peli['titulo']} - {peli['fecha']} {peli['horario']} - ${peli['precio']}")
+    if len(peliculas) > 0:
+        for i, peli in enumerate(peliculas, start=1):
+            print(f"{i}) {peli['titulo']} - {peli['fecha']} {peli['horario']} - ${peli['precio']}")
+    else:
+        print("No hay peliculas disponibles")
 
 def mostrarEstadoSala(peliculas):
     estados=[]
     for peli in peliculas:
-        ocupados = sum(peli["asientos"])
-        if ocupados == len(peli["asientos"]):
+        asientos= peli["asientos"]
+        ocupados = sum(1 for asiento in asientos if asiento!=False)
+        if ocupados == len(asientos):
             estados.append(1)  # lleno
         elif ocupados == 0:
-            estados.append(0)  # vacío
+            estados.append(0)  # vacio
         else:
             estados.append(2)  # mixto
     return estados
@@ -113,24 +143,23 @@ def prohibirSalaCompleta(estados):
 def prohibirSalaVacia(estados):
     return [1 if estado == 0 else 0 for estado in estados]
 
-def borrarRegistroAsiento(asientos):
+def borrarRegistroAsiento(asientos,usuario):
     reingreso=1
     cantidadEliminados=0
     asientosElegidos=[]
-    contOcupados=sum(asientos)
+    contOcupados=sum(1 for asiento in asientos if asiento!= False)
 
     while reingreso==1 and contOcupados>0:
         print(f"En esta sala hay {len(asientos)} asientos, {contOcupados} ocupados")
         try:
             asientoElegido=int(input("Seleccione asiento a liberar: ")) - 1
-
-            if 0 <= asientoElegido < len(asientos) and asientos[asientoElegido] and asientoElegido not in asientosElegidos:
+            if (0 <= asientoElegido < len(asientos) and asientos[asientoElegido]!=False and (usuario=="admin") or (asientos[asientoElegido]==usuario) and asientoElegido not in asientosElegidos):
                 print("Reserva eliminada correctamente")
                 asientosElegidos.append(asientoElegido)
                 contOcupados -= 1
                 cantidadEliminados += 1
             else:
-                print("Asiento inválido o ya libre")
+                print("Asiento inválido, ya libre o reservado por otra persona")
         except ValueError:
             print("ingrese numeros, no caracteres")
             
@@ -140,11 +169,11 @@ def borrarRegistroAsiento(asientos):
                 try:
                     reingreso = int(input("Desea seleccionar otro asiento? 1)SI 2)NO: "))
                     if reingreso not in [1, 2]:
-                        print("Ingrese un número válido (1-2)")
+                        print("Ingrese un numero valido (1-2)")
                 except ValueError:
-                    print("No se permiten caracteres, solo números")
+                    print("No se permiten caracteres, solo numeros")
         else:
-            print("La sala está vacía")
+            print("La sala esta vacia")
             reingreso = 2
 
     for asiento in asientosElegidos:
@@ -170,7 +199,7 @@ def seleccionarFuncion(peliculas,prohibir,palabra):
                 print("Opción incorrecta")
     return peliculaElegida
 
-def seleccionarAsiento(asientos):
+def seleccionarAsiento(asientos,usuario):
     reingreso=1
     cantidadReservados=0
     asientosElegidos=[]
@@ -205,14 +234,14 @@ def seleccionarAsiento(asientos):
                 reingreso=2
                 
     for asiento in asientosElegidos:
-        asientos[asiento] = True
+        asientos[asiento] = usuario
         
     return cantidadReservados
 
 def mostrarAsientos(asientosFuncion,cantFilas,cantColumnas):
     for j in range(cantFilas):
         for i in range(cantColumnas):
-            print("X" if asientosFuncion[i+j*cantColumnas] else "O", end=" ")
+            print("X" if asientosFuncion[i+j*cantColumnas]!=False else "O", end=" ")
         print("")
     print("")
 
@@ -350,7 +379,7 @@ def main():
                 print("No hay funciones disponibles")
             else:
                 peliculaElegida = seleccionarFuncion(peliculas,prohibir,"agregar")
-                cantidad = seleccionarAsiento(peliculas[peliculaElegida-1]["asientos"])
+                cantidad = seleccionarAsiento(peliculas[peliculaElegida-1]["asientos"],usuario)
                 peliculas[peliculaElegida-1]["recaudacion"] += cantidad * peliculas[peliculaElegida-1]["precio"]
 
         elif (opcAdmin==3 or opcUser==3 or opcGuest==2):
@@ -374,7 +403,7 @@ def main():
                 print("Todas las funciones están vacías")
             else:
                 peliculaElegida = seleccionarFuncion(peliculas,prohibir,"borrar")
-                cantidad = borrarRegistroAsiento(peliculas[peliculaElegida-1]["asientos"])
+                cantidad = borrarRegistroAsiento(peliculas[peliculaElegida-1]["asientos"],usuario)
                 peliculas[peliculaElegida-1]["recaudacion"] -= cantidad * peliculas[peliculaElegida-1]["precio"]
 
         elif (opcAdmin==5):
@@ -388,21 +417,35 @@ def main():
         elif (opcAdmin==7):
             agregarPelicula(peliculas,cantAsientos)
 
-        elif (opcAdmin==8 or opcUser==5 or opcGuest==3):
-            salir=2
-
-        if salir != 2:
-            salir = 0
-            while salir not in [1, 2]:
+        elif (opcAdmin == 8 or opcUser == 5 or opcGuest == 3):
+            print("¿Qué desea hacer?")
+            print("1) Volver al menú de login")
+            print("2) Salir del programa")
+            sub = 0
+            while sub not in [1, 2]:
                 try:
-                    salir = int(input("¿Desea volver al menú? 1)SI 2)NO: "))
-                    if salir not in [1, 2]:
+                    sub = int(input("Seleccione opción (1-2): "))
+                    if sub not in [1, 2]:
                         print("Ingrese un número válido (1-2)")
                 except ValueError:
-                    print("No se permiten caracteres, solo números")
+                    print("Ingrese un número válido (1-2)")
+
+            if sub == 1:
+                print("Volviendo al menú de login...")
+                contar(3)
+                rol, usuario = login()
+                while (rol == None):
+                    print("Usuario invalido")
+                    print("Volviendo a la pantalla de login")
+                    rol, usuario = login()
+                print(f"Acceso concedido: {usuario} ({rol})")
+            else:
+                print("Saliendo del programa...")
+                contar(3)
+                salir = 2
+
             
-    # ------------------ AGRGAMOS ALGO DE CONJUNTOS ------------------ #
-    
+    # ------------------ AGREGAMOS ALGO DE CONJUNTOS ------------------ #
     print("\n=== Ejemplo de uso de conjuntos ===")
 
     # Crear un conjunto con los roles existentes
@@ -420,10 +463,7 @@ def main():
     print("Cantidad total de usuarios:", len(nombres_usuarios))
     print("Cantidad total de roles:", len(roles_existentes))
 
-
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
 
 main()
-
-
 
