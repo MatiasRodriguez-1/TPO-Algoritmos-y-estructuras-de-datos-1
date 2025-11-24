@@ -9,7 +9,7 @@ archivoUsuarios = os.path.join(archivoBase,"usuarios.txt")
 archivoPeliculas = os.path.join(archivoBase,"peliculas.txt")
 
 # ==================== ARCHIVO ==================== #
-def cargar_Usarios_desde_archivo():
+def cargar_usarios_desde_archivo():
     try:
         archivo = open(archivoUsuarios, "r", encoding="utf-8")
         for linea in archivo:
@@ -175,6 +175,33 @@ def registrarUsuario():
         archivo.write(f"{usuario},{contraseña},User\n")
     print("Usuario creado con éxito.")
 
+def verReservasUsuario(peliculas, usuario):
+    """
+    Entrada: lista de peliculas y nombre del usuario logueado
+    Objetivo: mostrar en que funciones tiene asientos reservados y que numeros de asiento
+    """
+    tiene_reservas = False
+
+    for i, peli in enumerate(peliculas, start=1):
+        asientos_usuario = []
+        for idx, asiento in enumerate(peli["asientos"], start=1):
+            if asiento == usuario:
+                asientos_usuario.append(idx)
+
+        if len(asientos_usuario) > 0:
+            tiene_reservas = True
+            print("-------------------------------------------")
+            print(f"Función {i}: {peli['titulo']} - {peli['fecha']} {peli['horario']}")
+            print("Asientos reservados: ", end="")
+            for j in range(len(asientos_usuario)):
+                if j == len(asientos_usuario) - 1:
+                    print(asientos_usuario[j])
+                else:
+                    print(str(asientos_usuario[j]) + ", ", end="")
+
+    if not tiene_reservas:
+        print("No tiene reservas en ninguna funcion.")
+
 # ------------------ FUNCIONES UTILITARIAS ------------------ #
 def limpiarPantalla():
     """
@@ -194,7 +221,7 @@ def contar(n):
     print(n)
     time.sleep(1)
     contar(n-1)
-
+    
 # ------------------ FUNCIONES DE CINE ------------------ #
 def mostrarCartelera(peliculas):
     """
@@ -431,7 +458,7 @@ def agregarPelicula(peliculas,cantAsientos):
         else:
             partes_hora = horario.split(":")
             if len(partes_hora) != 2:
-                print("Formato de horario inválido. Use hh:mm")
+                print("Formato de horario invalido. Use hh:mm")
             else:
                 hora_str, min_str = partes_hora[0], partes_hora[1]
                 if not (hora_str.isdigit() and min_str.isdigit()):
@@ -514,19 +541,13 @@ def reporte_peliculas():
 
     print(f"\nTotal de películas: {len(peliculas_ordenadas)}")
 
-def leerArchivos():
-    """
-    Objetivo: Centralizar la lectura de todos los archivos necesarios
-    (usuarios, películas, etc.)
-    """
-    cargar_Usarios_desde_archivo()
-    cargar_peliculas_desde_archivo()
 
 # ------------------ MAIN ------------------ #
 
 def main():
-    leerArchivos()
-
+    cargar_usarios_desde_archivo()
+    cargar_peliculas_desde_archivo()
+    
     rol, usuario = login()
     while (rol == None):
         print("Usuario invalido")
@@ -551,28 +572,42 @@ def main():
         opcAdmin=opcUser=opcGuest=0
 
         if (rol=="Admin"):
-            print("1) Mostrar Cartelera\n2) Reservar Asiento\n3) Mostrar Asientos Disponibles\n4) Borrar Reserva Asiento\n5) Ver Recaudación\n6) Eliminar Pelicula\n7) Agregar Pelicula\n8) Ordenar Peliculas\n9) Salir")
+            print("1) Mostrar Cartelera")
+            print("2) Reservar Asiento")
+            print("3) Mostrar Asientos Disponibles")
+            print("4) Borrar Reserva Asiento")
+            print("5) Ver Recaudación") 
+            print("6) Eliminar Pelicula")
+            print("7) Agregar Pelicula")
+            print("8) Ordenar Peliculas")
+            print("9) Ver mis reservas")
+            print("10) Salir")
             opcValido=False
             while (opcValido==False):         
                 try:
-                    opcAdmin=int(input("Seleccione opción: "))
-                    if (opcAdmin>0 and opcAdmin<10):
+                    opcAdmin=int(input("Seleccione opcion: "))
+                    if (opcAdmin>0 and opcAdmin<11):
                         opcValido=True
                     else:
-                        print("El numero debe estar entre (1-9)")
+                        print("El numero debe estar entre (1-10)")
                 except ValueError:
                     print("Ingrese un numero no caracteres")
 
         elif(rol=="User"):
-            print("1) Mostrar Cartelera\n2) Reservar Asiento\n3) Mostrar Asientos Disponibles\n4) Borrar Reserva Asiento\n5) Salir")
+            print("1) Mostrar Cartelera")
+            print("2) Reservar Asiento")
+            print("3) Mostrar Asientos Disponibles")
+            print("4) Borrar Reserva Asiento")
+            print("5) Ver mis reservas")
+            print("6) Salir")
             opcValido=False
             while (opcValido==False):         
                 try:
-                    opcUser=int(input("Seleccione opción: "))
-                    if (opcUser>0 and opcUser<6):
+                    opcUser=int(input("Seleccione opcion: "))
+                    if (opcUser>0 and opcUser<7):
                         opcValido=True
                     else:
-                        print("El numero debe estar entre (1-5)")
+                        print("El numero debe estar entre (1-6)")
                 except ValueError:
                     print("Ingrese un numero no caracteres")
 
@@ -581,7 +616,7 @@ def main():
             opcValido=False
             while (opcValido==False):         
                 try:
-                    opcGuest=int(input("Seleccione opción: "))
+                    opcGuest=int(input("Seleccione opcion: "))
                     if (opcGuest>0 and opcGuest<4):
                         opcValido=True
                     else:
@@ -624,12 +659,12 @@ def main():
             peliculaValida=False
             while (peliculaValida==False):
                 try:
-                    peliculaElegida=int(input("Función para ver asientos: "))
+                    peliculaElegida=int(input("Funcion para ver asientos: "))
                     if 1 <= peliculaElegida <= len(peliculas):
                         mostrarAsientos(peliculas[peliculaElegida-1]["asientos"],cantFilas,cantColumnas)
                         peliculaValida=True
                     else:
-                        print("Opción incorrecta")
+                        print("Opcion incorrecta")
                 except ValueError:
                     print("ingrese solo numeros, no caracteres.")
 
@@ -637,7 +672,7 @@ def main():
             estados = mostrarEstadoSala(peliculas)
             prohibir = prohibirSalaVacia(estados)
             if all(p==1 for p in prohibir):
-                print("Todas las funciones están vacías")
+                print("Todas las funciones estan vacias")
             else:
                 peliculaElegida = seleccionarFuncion(peliculas,prohibir,"borrar")
                 mostrarAsientos(
@@ -668,21 +703,24 @@ def main():
         elif (opcAdmin==8):
             reporte_peliculas()
 
-        elif (opcAdmin == 9 or opcUser == 5 or opcGuest == 3):
+        elif (opcAdmin==9 or opcUser==5):
+            verReservasUsuario(peliculas, usuario)
+
+        elif (opcAdmin == 10 or opcUser == 6 or opcGuest == 3):
             print("¿Qué desea hacer?")
-            print("1) Volver al menú de login")
+            print("1) Volver al menu de login")
             print("2) Salir del programa")
             sub = 0
             while sub not in [1, 2]:
                 try:
-                    sub = int(input("Seleccione opción (1-2): "))
+                    sub = int(input("Seleccione opcion (1-2): "))
                     if sub not in [1, 2]:
-                        print("Ingrese un número válido (1-2)")
+                        print("Ingrese un número valido (1-2)")
                 except ValueError:
-                    print("Ingrese un número válido (1-2)")
+                    print("Ingrese un número valido (1-2)")
 
             if sub == 1:
-                print("Volviendo al menú de login...")
+                print("Volviendo al menu de login...")
                 contar(3)
                 rol, usuario = login()
                 while (rol == None):
