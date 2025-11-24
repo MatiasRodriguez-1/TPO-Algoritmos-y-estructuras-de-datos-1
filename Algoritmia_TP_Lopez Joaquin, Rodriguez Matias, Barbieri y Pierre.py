@@ -473,11 +473,18 @@ def reporte_peliculas():
 
     print(f"\nTotal de películas: {len(peliculas_ordenadas)}")
 
+def leerArchivos():
+    """
+    Objetivo: Centralizar la lectura de todos los archivos necesarios
+    (usuarios, películas, etc.)
+    """
+    cargar_Usarios_desde_archivo()
+    cargar_peliculas_desde_archivo()
+
 # ------------------ MAIN ------------------ #
 
 def main():
-    cargar_Usarios_desde_archivo()
-    cargar_peliculas_desde_archivo()
+    leerArchivos()
 
     rol, usuario = login()
     while (rol == None):
@@ -649,4 +656,3 @@ def main():
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
     
 main()
-
