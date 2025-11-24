@@ -1,11 +1,16 @@
 import time
+import os
 # ==================== DATOS INICIALES ==================== #
 usuarios = [{"usuario": "admin", "contraseña": "admin", "rol": "Admin"}]
 # Estructura base de películas
 peliculas = []
+archivoBase = os.path.dirname(__file__)
+archivoUsuarios = os.path.join(archivoBase,"usuarios.txt")
+archivoPeliculas = os.path.join(archivoBase,"peliculas.txt")
+
 # ==================== ARCHIVO ==================== #
 try:
-    archivo = open("usuarios.txt", "r", encoding="utf-8")
+    archivo = open(archivoUsuarios, "r", encoding="utf-8")
     for linea in archivo:
         if linea != "\n":
             partes = linea.split(",")
@@ -18,37 +23,65 @@ try:
     print("Archivo 'usuarios.txt' leído correctamente.")
 except FileNotFoundError:
     print("Archivo no encontrado. Se creará vacío.")
-    archivo = open("usuarios.txt", "a", encoding="utf-8")
+    archivo = open(archivoUsuarios, "a", encoding="utf-8")
     archivo.close()
     
 def cargar_peliculas_desde_archivo():
     """
     Objetivo: cargar la lista peliculas utilizando la informacion almacenada en archivos
     """
+    peliculas.clear()
     try:
-        with open("peliculas.txt", "r", encoding="utf-8") as archivo:
+        with open(archivoPeliculas, "r", encoding="utf-8") as archivo:
             for linea in archivo:
-                titulo, fecha, horario, precio, recaudacion = linea.strip().split(",")
+                partes = linea.strip().split(",")
+
+                titulo = partes[0]
+                fecha = partes[1]
+                horario = partes[2]
+                precio = int(partes[3])
+                recaudacion = int(partes[4])
+
+                asientosTexto = partes[5:]  # Los valores restantes
+
+                asientos = []
+                for a in asientosTexto:
+                    if a == "False":
+                        asientos.append(False)
+                    else:
+                        asientos.append(a)
+
                 peliculas.append({
                     "titulo": titulo,
                     "fecha": fecha,
                     "horario": horario,
-                    "precio": int(precio),
-                    "recaudacion": int(recaudacion),
-                    "asientos": [False for _ in range(30)]
+                    "precio": precio,
+                    "recaudacion": recaudacion,
+                    "asientos": asientos
                 })
-        print("\nPelículas cargadas correctamente desde peliculas.txt")
+
+        print("\nPelículas cargadas correctamente.")
+
     except FileNotFoundError:
         print("\nNo se encontró el archivo peliculas.txt. Se creará al guardar nuevas películas.")
-
+        
 def guardar_peliculas_en_archivo():
     """
     Objetivo: Almacenar la informacion de la lista de peliculas en un archivo de texto
     """
-    with open("peliculas.txt", "w", encoding="utf-8") as archivo:
+    with open(archivoPeliculas, "w", encoding="utf-8") as archivo:
         for p in peliculas:
-            archivo.write(f"{p['titulo']},{p['fecha']},{p['horario']},{p['precio']},{p['recaudacion']}\n")
-    print("Películas guardadas correctamente en peliculas.txt")
+            linea = f"{p['titulo']},{p['fecha']},{p['horario']},{p['precio']},{p['recaudacion']}"
+            for asiento in p["asientos"]:
+                if asiento == False:
+                    linea += ",False"
+                else:
+                    linea += f",{asiento}"
+
+            archivo.write(linea + "\n")
+
+    print("Películas (incluyendo asientos) guardadas correctamente en peliculas.txt")
+
 
 # ==================== FUNCIONES DE USUARIOS ==================== #
 def login():
@@ -80,10 +113,11 @@ def login():
     usuario = input("Usuario: ")
     contraseña = input("Contraseña: ")
     
-    usuario_valido = next(
-        (u for u in usuarios if u["usuario"] == usuario and u["contraseña"] == contraseña),
-        None
-    )
+    usuario_valido = None
+    for u in usuarios:
+        if u["usuario"] == usuario and u["contraseña"] == contraseña:
+            usuario_valido = u
+
 
     if usuario_valido:
         print(f"Bienvenido {usuario_valido['usuario']} (rol: {usuario_valido['rol']})")
@@ -100,7 +134,11 @@ def registrarUsuario():
     nombre_valido = False
     while not nombre_valido:
         usuario = input("Nuevo usuario: ").strip()
-        if any(u["usuario"] == usuario for u in usuarios):
+        existe = False
+        for u in usuarios:
+            if u["usuario"] == usuario:
+                existe = True
+        if existe:
             print("Ese nombre de usuario ya existe. Elegí otro.")
         elif usuario == "":
             print("El nombre de usuario no puede ser dejado en blanco")
@@ -111,8 +149,14 @@ def registrarUsuario():
     contraseña_valida = False
     while not contraseña_valida:
         contraseña = input("Contraseña: ").strip()
-        tiene_mayus = any(ch.isupper() for ch in contraseña)
-        tiene_numero = any(ch.isdigit() for ch in contraseña)
+        tiene_mayus = False
+        for ch in contraseña:
+            if ch.isupper():
+                tiene_mayus = True
+        tiene_numero = False
+        for ch in contraseña:
+            if ch.isdigit():
+                tiene_numero = True
         cumple_formato = (len(contraseña) >= 8 and tiene_mayus and tiene_numero)
 
         if cumple_formato:
@@ -126,7 +170,7 @@ def registrarUsuario():
             print("La contraseña no cumple los requisitos.")
         
     usuarios.append({"usuario": usuario, "contraseña": contraseña, "rol": "User"})
-    with open("usuarios.txt", "a", encoding="utf-8") as archivo:
+    with open(archivoUsuarios, "a", encoding="utf-8") as archivo:
         archivo.write(f"{usuario},{contraseña},User\n")
     print("Usuario creado con éxito.")
 
@@ -330,8 +374,14 @@ def agregarPelicula(peliculas,cantAsientos):
         nombre = input("Nombre de la película: ").strip()
         if nombre == "":
             print("El nombre no puede estar vacío")
-        elif any(p["titulo"].lower() == nombre.lower() for p in peliculas):
+        existe = False
+        for p in peliculas:
+            if p["titulo"].lower() == nombre.lower():
+                existe = True
+
+        if existe:
             print("Ya existe una película con ese nombre. Ingrese otro nombre.")
+
         else:
             nombreValido = True
 
@@ -354,7 +404,7 @@ def agregarPelicula(peliculas,cantAsientos):
                 print("El precio debe ser de al menos 1500")
         except ValueError:
             print("Ingrese numeros no caracteres")
-    asientosFuncion=[False for _ in range (cantAsientos)]
+    asientosFuncion=[False for i in range (cantAsientos)]
     peliculas.append({
         "titulo": nombre,
         "fecha": fecha,
@@ -410,24 +460,6 @@ def reporte_peliculas():
 
     print(f"\nTotal de películas: {len(peliculas_ordenadas)}")
 
-# ==================== CONJUNTOS ==================== #
-def demo_conjuntos():
-    """
-    Entrada: la lista de usuarios
-    Objetivo: Mostrar las estadisticas de los usuarios durante la ejecuccion 
-    """
-    print("\n=== Ejemplo de uso de conjuntos ===")
-
-    roles_existentes = {u.get("rol") for u in usuarios}
-    print("Roles existentes en el sistema:", roles_existentes)
-
-    nombres_usuarios = {u.get("usuario") for u in usuarios}
-    nombres_usuarios.add("admin")
-
-    print("Usuarios registrados (sin duplicados gracias al conjunto):", nombres_usuarios)
-    print("Cantidad total de usuarios:", len(nombres_usuarios))
-    print("Cantidad total de roles:", len(roles_existentes))
-
 # ------------------ MAIN ------------------ #
 
 def main():
@@ -447,14 +479,10 @@ def main():
     
     if len(peliculas) == 0:
         peliculas.extend([
-            {"titulo":"Hereditary","fecha":"30/7/2025","horario":"9:00","precio":1200,"recaudacion":0,"asientos":[False for _ in range(cantAsientos)]},
-            {"titulo":"Scott Pilgrim vs. The World","fecha":"31/7/2025","horario":"12:00","precio":1500,"recaudacion":0,"asientos":[False for _ in range(cantAsientos)]},
-            {"titulo":"The Truman Show","fecha":"1/8/2025","horario":"18:00","precio":1000,"recaudacion":0,"asientos":[False for _ in range(cantAsientos)]}
+            {"titulo":"Hereditary","fecha":"30/7/2025","horario":"9:00","precio":1200,"recaudacion":0,"asientos":[False for i in range(cantAsientos)]},
+            {"titulo":"Scott Pilgrim vs. The World","fecha":"31/7/2025","horario":"12:00","precio":1500,"recaudacion":0,"asientos":[False for i in range(cantAsientos)]},
+            {"titulo":"The Truman Show","fecha":"1/8/2025","horario":"18:00","precio":1000,"recaudacion":0,"asientos":[False for i in range(cantAsientos)]}
         ])
-    else:
-        for peli in peliculas:
-            peli["asientos"] = [False for _ in range(cantAsientos)]
-
     salir=0
     while salir!=2:
         print("-------------------------------------------")
@@ -505,7 +533,11 @@ def main():
         elif (opcAdmin==2 or opcUser==2):
             estados = mostrarEstadoSala(peliculas)
             prohibir = prohibirSalaCompleta(estados)
-            if all(p==1 for p in prohibir):
+            todas_llenas = True
+            for p in prohibir:
+                if p != 1:
+                    todas_llenas = False
+            if todas_llenas:
                 print("No hay funciones disponibles")
             else:
                 peliculaElegida = seleccionarFuncion(peliculas,prohibir,"agregar")
@@ -578,8 +610,6 @@ def main():
                 print("Saliendo del programa...")
                 contar(3)
                 salir = 2
-
-    demo_conjuntos()
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
     
 main()
