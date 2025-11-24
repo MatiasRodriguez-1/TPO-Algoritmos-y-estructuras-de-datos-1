@@ -9,22 +9,23 @@ archivoUsuarios = os.path.join(archivoBase,"usuarios.txt")
 archivoPeliculas = os.path.join(archivoBase,"peliculas.txt")
 
 # ==================== ARCHIVO ==================== #
-try:
-    archivo = open(archivoUsuarios, "r", encoding="utf-8")
-    for linea in archivo:
-        if linea != "\n":
-            partes = linea.split(",")
-            if len(partes) == 3:
-                usuario = partes[0]
-                contraseña = partes[1]
-                rol = partes[2].replace("\n", "")
-                usuarios.append({"usuario": usuario, "contraseña": contraseña, "rol": rol})
-    archivo.close()
-    print("Archivo 'usuarios.txt' leído correctamente.")
-except FileNotFoundError:
-    print("Archivo no encontrado. Se creará vacío.")
-    archivo = open(archivoUsuarios, "a", encoding="utf-8")
-    archivo.close()
+def cargar_Usarios_desde_archivo():
+    try:
+        archivo = open(archivoUsuarios, "r", encoding="utf-8")
+        for linea in archivo:
+            if linea != "\n":
+                partes = linea.split(",")
+                if len(partes) == 3:
+                    usuario = partes[0]
+                    contraseña = partes[1]
+                    rol = partes[2].replace("\n", "")
+                    usuarios.append({"usuario": usuario, "contraseña": contraseña, "rol": rol})
+        archivo.close()
+        print("Archivo 'usuarios.txt' leído correctamente.")
+    except FileNotFoundError:
+        print("Archivo no encontrado. Se creará vacío.")
+        archivo = open(archivoUsuarios, "a", encoding="utf-8")
+        archivo.close()
     
 def cargar_peliculas_desde_archivo():
     """
@@ -261,6 +262,12 @@ def borrarRegistroAsiento(asientos,usuario):
                 asientosElegidos.append(asientoElegido)
                 contOcupados -= 1
                 cantidadEliminados += 1
+                
+                asientos[asientoElegido] = False
+                cantFilas = 3
+                cantColumnas = int(len(asientos) / cantFilas)
+                mostrarAsientos(asientos, cantFilas, cantColumnas)
+                
             else:
                 print("Asiento inválido, ya libre o reservado por otra persona")
         except ValueError:
@@ -330,6 +337,12 @@ def seleccionarAsiento(asientos,usuario):
                 asientosElegidos.append(asientoElegido)
                 contDisponibles -= 1
                 cantidadReservados += 1
+                
+                asientos[asientoElegido] = usuario
+                cantFilas = 3
+                cantColumnas = int(len(asientos)/cantFilas)
+                mostrarAsientos(asientos, cantFilas, cantColumnas)
+
             else:
                 print("Asiento inválido o ya seleccionado")
 
@@ -463,6 +476,7 @@ def reporte_peliculas():
 # ------------------ MAIN ------------------ #
 
 def main():
+    cargar_Usarios_desde_archivo()
     cargar_peliculas_desde_archivo()
 
     rol, usuario = login()
@@ -541,7 +555,19 @@ def main():
                 print("No hay funciones disponibles")
             else:
                 peliculaElegida = seleccionarFuncion(peliculas,prohibir,"agregar")
+                
+                mostrarAsientos(
+                    peliculas[peliculaElegida-1]["asientos"],
+                    cantFilas,
+                    cantColumnas
+                )
                 cantidad = seleccionarAsiento(peliculas[peliculaElegida-1]["asientos"],usuario)
+                
+                mostrarAsientos(
+                    peliculas[peliculaElegida-1]["asientos"],
+                    cantFilas,
+                    cantColumnas
+                )
                 peliculas[peliculaElegida-1]["recaudacion"] += cantidad * peliculas[peliculaElegida-1]["precio"]
                 guardar_peliculas_en_archivo()
 
@@ -566,7 +592,17 @@ def main():
                 print("Todas las funciones están vacías")
             else:
                 peliculaElegida = seleccionarFuncion(peliculas,prohibir,"borrar")
+                mostrarAsientos(
+                    peliculas[peliculaElegida-1]["asientos"],
+                    cantFilas,
+                    cantColumnas
+                )
                 cantidad = borrarRegistroAsiento(peliculas[peliculaElegida-1]["asientos"],usuario)
+                mostrarAsientos(
+                    peliculas[peliculaElegida-1]["asientos"],
+                    cantFilas,
+                    cantColumnas
+                )
                 peliculas[peliculaElegida-1]["recaudacion"] -= cantidad * peliculas[peliculaElegida-1]["precio"]
                 guardar_peliculas_en_archivo()
 
@@ -613,3 +649,4 @@ def main():
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
     
 main()
+
