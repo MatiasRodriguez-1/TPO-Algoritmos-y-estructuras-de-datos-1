@@ -375,38 +375,76 @@ def mostrarAsientos(asientosFuncion,cantFilas,cantColumnas):
         print("")
     print("")
 
-# ==================== FUNCIONES DE PELÍCULAS ==================== #
+# ==================== FUNCIONES DE PELICULAS ==================== #
 def agregarPelicula(peliculas,cantAsientos):
     """
     Entradas: la lista de peliculas y la cantidad de asientos (para generar la lista de asientos vacios)
     Objetivo: Agregar peliculas a la lista de peliculas
     Salida: la lista de peliculas modificada con mas peliculas
     """
+    # ---- NOMBRE ----
     nombreValido = False
     while (nombreValido==False):
-        nombre = input("Nombre de la película: ").strip()
+        nombre = input("Nombre de la pelicula: ").strip()
         if nombre == "":
-            print("El nombre no puede estar vacío")
-        existe = False
-        for p in peliculas:
-            if p["titulo"].lower() == nombre.lower():
-                existe = True
-
-        if existe:
-            print("Ya existe una película con ese nombre. Ingrese otro nombre.")
-
+            print("El nombre no puede estar vacio")
         else:
-            nombreValido = True
+            existe = False
+            for p in peliculas:
+                if p["titulo"].lower() == nombre.lower():
+                    existe = True
 
-    fecha=input("Fecha: ").strip()
-    while(fecha==""):
-        print("la fecha no puede estar vacia")
-        fecha=input("Fecha: ").strip()
-    horario=input("Horario: ").strip()
-    while(horario==""):
-        print("el horario no puede estar vacio")
-        horario=input("Horario: ").strip()
-        
+            if existe:
+                print("Ya existe una pelicula con ese nombre. Ingrese otro nombre.")
+            else:
+                nombreValido = True
+
+    # ---- FECHA (dd/mm/aaaa) ----
+    fechaValida = False
+    while fechaValida == False:
+        fecha = input("Fecha (dd/mm/aaaa): ").strip()
+        if fecha == "":
+            print("La fecha no puede estar vacia")
+        else:
+            partes = fecha.split("/")
+            if len(partes) != 3:
+                print("Formato de fecha invalido. Use dd/mm/aaaa")
+            else:
+                dia_str, mes_str, anio_str = partes[0], partes[1], partes[2]
+                if not (dia_str.isdigit() and mes_str.isdigit() and anio_str.isdigit()):
+                    print("La fecha solo puede contener numeros y '/'.")
+                else:
+                    dia = int(dia_str)
+                    mes = int(mes_str)
+                    anio = int(anio_str)
+                    if dia < 1 or dia > 31 or mes < 1 or mes > 12 or anio < 2024:
+                        print("Fecha fuera de rango. Ingrese una fecha valida a partir de 2024.")
+                    else:
+                        fechaValida = True
+
+    # ---- HORARIO (hh:mm) ----
+    horarioValido = False
+    while horarioValido == False:
+        horario = input("Horario (hh:mm): ").strip()
+        if horario == "":
+            print("El horario no puede estar vacio")
+        else:
+            partes_hora = horario.split(":")
+            if len(partes_hora) != 2:
+                print("Formato de horario inválido. Use hh:mm")
+            else:
+                hora_str, min_str = partes_hora[0], partes_hora[1]
+                if not (hora_str.isdigit() and min_str.isdigit()):
+                    print("El horario solo puede contener numeros y ':'.")
+                else:
+                    hora = int(hora_str)
+                    minuto = int(min_str)
+                    if hora < 0 or hora > 23 or minuto < 0 or minuto > 59:
+                        print("Horario fuera de rango. Use valores entre 00:00 y 23:59.")
+                    else:
+                        horarioValido = True
+
+    # ---- PRECIO ----
     precioValido=False
     while (precioValido==False):
         try:
@@ -417,6 +455,8 @@ def agregarPelicula(peliculas,cantAsientos):
                 print("El precio debe ser de al menos 1500")
         except ValueError:
             print("Ingrese numeros no caracteres")
+
+    # ---- GENERAR ASIENTOS ----
     asientosFuncion=[False for i in range (cantAsientos)]
     peliculas.append({
         "titulo": nombre,
@@ -427,7 +467,8 @@ def agregarPelicula(peliculas,cantAsientos):
         "asientos": asientosFuncion
     })
     guardar_peliculas_en_archivo()
-    print(f'Película "{nombre}" agregada correctamente.')
+    print(f'Pelicula "{nombre}" agregada correctamente.')
+
     
 def eliminarPelicula(peliculas):
     """
