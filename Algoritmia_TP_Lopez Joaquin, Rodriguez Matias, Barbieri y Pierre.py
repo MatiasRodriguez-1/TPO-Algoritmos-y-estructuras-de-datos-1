@@ -82,7 +82,7 @@ def guardar_peliculas_en_archivo():
 
                 archivo.write(linea + "\n")
 
-        print("Películas (incluyendo asientos) guardadas correctamente en peliculas.txt")
+        print("Películas guardadas correctamente en peliculas.txt")
 
     except Exception as e:
         print(f"Error al intentar guardar el archivo peliculas.txt: {e}")
@@ -324,7 +324,7 @@ def borrarRegistroAsiento(asientos,usuario):
 def seleccionarFuncion(peliculas,prohibir,palabra):
     """
     Entrada: la lista de peliculas, la lista que prohibe salas llenas o vacias (dependiendo de si se utilizara para reservar
-    o borrar una reserva) y la palabra (agregar,borrar)
+    o borrar una reserva) y la palabra (agregar,borrar,saltar)
     Objetivo: Seleccionar una pelicula de la cartelera
     Salida: el numero de la pelicula seleccionada
     """
@@ -337,8 +337,12 @@ def seleccionarFuncion(peliculas,prohibir,palabra):
             print("porfavor, no ingrese caracteres. Solo numeros")
         else:
             if 1 <= peliculaElegida <= len(peliculas):
-                if prohibir[peliculaElegida-1]!=1:
+                if palabra=="saltar":
+                    print("Pelicula elegida correctamente")
                     valido=1
+                elif prohibir[peliculaElegida-1]!=1:
+                    valido=1
+                    print("Pelicula elegida correctamente")
                 else:
                     print(f"Lo sentimos, esta función esta {'llena' if palabra=='agregar' else 'vacía'}")
             else:
@@ -524,6 +528,119 @@ def eliminarPelicula(peliculas):
     peliculas.pop(opc)
     guardar_peliculas_en_archivo()
     print("Pelicula eliminada correctamente")
+    
+def modificarPelicula(peliculas):
+    prohibir=0
+    indice=seleccionarFuncion(peliculas,prohibir,"saltar")-1
+    pelicula=peliculas[indice]
+    
+    opcion_valida = False
+    while opcion_valida == False:
+        print("\n=== ¿Qué desea modificar? ===")
+        print("1) Título")
+        print("2) Fecha")
+        print("3) Horario")
+        print("4) Precio")
+        print("5) Cancelar")
+        try:
+            opc = int(input("Seleccione opción: "))
+            if opc in [1,2,3,4,5]:
+                opcion_valida=True
+            else:
+                print("Ingrese un valor entre 1-5")
+        except ValueError:
+            print("Debe ingresar un numero, no una letra")
+
+    # --------- MODIFICAR TÍTULO ---------
+    if opc == 1:
+        nombreValido = False
+        while (nombreValido==False):
+            nombre = input("Nombre de la pelicula: ").strip()
+            if nombre == "":
+                print("El nombre no puede estar vacio")
+            else:
+                existe = False
+                for p in peliculas:
+                    if p["titulo"].lower() == nombre.lower():
+                        existe = True
+                if existe:
+                    print("Ya existe una pelicula con ese nombre. Ingrese otro nombre.")
+                else:
+                    nombreValido = True
+        pelicula["titulo"]=nombre
+
+    # --------- MODIFICAR FECHA ---------
+    elif opc == 2:
+        fechaValida = False
+        while fechaValida == False:
+            fecha = input("Fecha (dd/mm/aaaa): ").strip()
+            if fecha == "":
+                print("La fecha no puede estar vacia")
+            else:
+                partes = fecha.split("/")
+                if len(partes) != 3:
+                    print("Formato de fecha invalido. Use dd/mm/aaaa")
+                else:
+                    dia_str, mes_str, anio_str = partes[0], partes[1], partes[2]
+                    if not (dia_str.isdigit() and mes_str.isdigit() and anio_str.isdigit()):
+                        print("La fecha solo puede contener numeros y '/'.")
+                    else:
+                        dia = int(dia_str)
+                        mes = int(mes_str)
+                        anio = int(anio_str)
+                        if dia < 1 or dia > 31 or mes < 1 or mes > 12 or anio < 2024:
+                            print("Fecha fuera de rango. Ingrese una fecha valida a partir de 2024.")
+                        else:
+                            fechaValida = True
+        pelicula["fecha"]=fecha
+
+    # --------- MODIFICAR HORARIO ---------
+    elif opc == 3:
+        horarioValido = False
+        while horarioValido == False:
+            horario = input("Horario (hh:mm): ").strip()
+            if horario == "":
+                print("El horario no puede estar vacio")
+            else:
+                partes_hora = horario.split(":")
+                if len(partes_hora) != 2:
+                    print("Formato de horario invalido. Use hh:mm")
+                else:
+                    hora_str, min_str = partes_hora[0], partes_hora[1]
+                    if not (hora_str.isdigit() and min_str.isdigit()):
+                        print("El horario solo puede contener numeros y ':'.")
+                    else:
+                        hora = int(hora_str)
+                        minuto = int(min_str)
+                        if hora < 0 or hora > 23 or minuto < 0 or minuto > 59:
+                            print("Horario fuera de rango. Use valores entre 00:00 y 23:59.")
+                        else:
+                            horarioValido = True
+        pelicula["horario"]=horario
+
+    # --------- MODIFICAR PRECIO ---------
+    elif opc == 4:
+        precioValido=False
+        while (precioValido==False):
+            try:
+                precio=int(input("Precio de entrada: "))
+                if (precio>=1500):
+                    precioValido=True
+                else:
+                    print("El precio debe ser de al menos 1500")
+            except ValueError:
+                print("Ingrese numeros no caracteres")
+        pelicula["precio"]=precio
+
+    elif opc == 5:
+        print("Modificacion cancelada.")
+        return
+    else:
+        print("Opcion invalida.")
+
+    # Guardar cambios en archivo
+    print("Pelicula Modificada correctamente")
+    guardar_peliculas_en_archivo()
 
 # ==================== FUNCIONES DE REPORTES ==================== #
 def reporte_peliculas():
@@ -585,15 +702,16 @@ def main():
             print("7) Agregar Pelicula")
             print("8) Ordenar Peliculas")
             print("9) Ver mis reservas")
-            print("10) Salir")
+            print("10) Modificar Pelicula")
+            print("11) Salir")
             opcValido=False
             while (opcValido==False):         
                 try:
                     opcAdmin=int(input("Seleccione opcion: "))
-                    if (opcAdmin>0 and opcAdmin<11):
+                    if (opcAdmin>0 and opcAdmin<12):
                         opcValido=True
                     else:
-                        print("El numero debe estar entre (1-10)")
+                        print("El numero debe estar entre (1-11)")
                 except ValueError:
                     print("Ingrese un numero no caracteres")
 
@@ -675,7 +793,11 @@ def main():
         elif (opcAdmin==4 or opcUser==4):
             estados = mostrarEstadoSala(peliculas)
             prohibir = prohibirSalaVacia(estados)
-            if all(p==1 for p in prohibir):
+            todas_vacias = True
+            for p in prohibir:
+                if p != 1:
+                    todas_vacias = False
+            if todas_vacias:
                 print("Todas las funciones estan vacias")
             else:
                 peliculaElegida = seleccionarFuncion(peliculas,prohibir,"borrar")
@@ -709,8 +831,10 @@ def main():
 
         elif (opcAdmin==9 or opcUser==5):
             verReservasUsuario(peliculas, usuario)
+        elif (opcAdmin==10):
+            modificarPelicula(peliculas)
 
-        elif (opcAdmin == 10 or opcUser == 6 or opcGuest == 3):
+        elif (opcAdmin == 11 or opcUser == 6 or opcGuest == 3):
             print("¿Qué desea hacer?")
             print("1) Volver al menu de login")
             print("2) Salir del programa")
@@ -739,4 +863,3 @@ def main():
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
     
 main()
-
