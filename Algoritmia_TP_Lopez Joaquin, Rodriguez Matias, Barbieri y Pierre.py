@@ -70,18 +70,22 @@ def guardar_peliculas_en_archivo():
     """
     Objetivo: Almacenar la informacion de la lista de peliculas en un archivo de texto
     """
-    with open(archivoPeliculas, "w", encoding="utf-8") as archivo:
-        for p in peliculas:
-            linea = f"{p['titulo']},{p['fecha']},{p['horario']},{p['precio']},{p['recaudacion']}"
-            for asiento in p["asientos"]:
-                if asiento == False:
-                    linea += ",False"
-                else:
-                    linea += f",{asiento}"
+    try:
+        with open(archivoPeliculas, "w", encoding="utf-8") as archivo:
+            for p in peliculas:
+                linea = f"{p['titulo']},{p['fecha']},{p['horario']},{p['precio']},{p['recaudacion']}"
+                for asiento in p["asientos"]:
+                    if asiento == False:
+                        linea += ",False"
+                    else:
+                        linea += f",{asiento}"
 
-            archivo.write(linea + "\n")
+                archivo.write(linea + "\n")
 
-    print("Películas (incluyendo asientos) guardadas correctamente en peliculas.txt")
+        print("Películas (incluyendo asientos) guardadas correctamente en peliculas.txt")
+
+    except Exception as e:
+        print(f"Error al intentar guardar el archivo peliculas.txt: {e}")
 
 
 # ==================== FUNCIONES DE USUARIOS ==================== #
@@ -735,3 +739,4 @@ def main():
     print("----------------------------------------------------\nPrograma finalizado\nGracias por utilizar nuestros servicios")
     
 main()
+
